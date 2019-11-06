@@ -11,6 +11,10 @@ class Order:
     rate: float
     amount: float
 
+@dcs.dataclass
+class Fill:
+    account: str
+
 def place_order(order: Order):
     if order.market not in markets:
         markets[order.market] = {

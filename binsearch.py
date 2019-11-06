@@ -13,6 +13,5 @@ def bisect(val, array, key=lambda x: x, reverse=False):
 
 def insert(val, array, key=lambda x: x, reverse=False):
     i = bisect(val, array, key, reverse)
-    if i is None: return
     array.insert(i, val)
-    return i
+    return array
