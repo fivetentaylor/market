@@ -2,13 +2,15 @@ import pudb
 import market
 
 def test_place_asks():
-    market.place_order(market.Order(
+    o1 = market.Order(
         account = '123',
         kind = 'ask',
         market = 'test',
         rate = 100.0,
         amount = 5
-    ))
+    )
+    pudb.set_trace()
+    market.place_order(o1)
 
     market.place_order(market.Order(
         account = '123',
