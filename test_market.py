@@ -9,7 +9,6 @@ def test_place_asks():
         rate = 100.0,
         amount = 5
     )
-    pudb.set_trace()
     market.place_order(o1)
 
     market.place_order(market.Order(
@@ -58,6 +57,7 @@ def test_place_bids():
         amount = 5
     ))
 
+    pudb.set_trace()
     m = market.markets['test']['bid']
     assert(m[2].rate == 99.0)
     assert(m[1].rate == 100.0)

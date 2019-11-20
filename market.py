@@ -20,7 +20,7 @@ class Fill:
     aggressor: str
 
 def fill_order(maker: bool, order: Order):
-    pass
+    fills.append(order)
 
 def place_order(order: Order):
     if order.market not in markets:
@@ -36,7 +36,7 @@ def place_order(order: Order):
         len(market['bid']) > 0 and
         order.rate < market['bid'][0].rate
     ):
-        if order.amount > market['bid'][0].amount:
+        if order.amount >= market['bid'][0].amount:
             o = market['bid'].pop(0)
             fill_order(True, o)
             fill_order(False, dcs.replace(order, amount=o.amount, rate=o.rate))
@@ -52,7 +52,16 @@ def place_order(order: Order):
         len(market['ask']) > 0 and
         order.rate > market['ask'][0].rate
     ):
-        break
+        if order.amount >= market['ask'][0].amount:
+            o = market['ask'].pop(0)
+            fill_order(True, o)
+            fill_order(False, dcs.replace(order, amount=o.amount, rate=o.rate))
+            order.amount -= o.amount
+        else:
+            o = market['ask'][0]
+            fill_order(True, dcs.replace(o, amount=order.amount))
+            fill_order(False, dcs.replace(order, rate=o.rate))
+            o.amount -= order.amount
 
     if order.amount > 0:
         insert(
