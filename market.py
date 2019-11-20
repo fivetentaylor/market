@@ -20,8 +20,10 @@ class Fill:
     account: str
     aggressor: str
 
+
 def fill_order(maker: bool, order: Order):
     fills.append(order)
+
 
 def place_order(order: Order):
     if order.market not in markets:
