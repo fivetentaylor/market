@@ -19,6 +19,8 @@ class Fill:
     account: str
     aggressor: str
 
+def fill_order(maker: bool, order: Order):
+    pass
 
 def place_order(order: Order):
     if order.market not in markets:
@@ -32,9 +34,18 @@ def place_order(order: Order):
     while (
         order.kind == 'ask' and
         len(market['bid']) > 0 and
-        order.rate > market['bid'][0].rate
+        order.rate < market['bid'][0].rate
     ):
-        break
+        if order.amount > market['bid'][0].amount:
+            o = market['bid'].pop(0)
+            fill_order(True, o)
+            fill_order(False, dcs.replace(order, amount=o.amount, rate=o.rate))
+            order.amount -= o.amount
+        else:
+            o = market['bid'][0]
+            fill_order(True, dcs.replace(o, amount=order.amount))
+            fill_order(False, dcs.replace(order, rate=o.rate))
+            o.amount -= order.amount
 
     while (
         order.kind == 'bid' and
@@ -43,9 +54,10 @@ def place_order(order: Order):
     ):
         break
 
-    insert(
-        order,
-        market[order.kind],
-        key=lambda m: m.rate,
-        reverse=order.kind == 'bid',
-    )
+    if order.amount > 0:
+        insert(
+            order,
+            market[order.kind],
+            key=lambda m: m.rate,
+            reverse=order.kind == 'bid',
+        )
