@@ -1,5 +1,6 @@
 import dataclasses as dcs
 from binsearch import insert
+from operator import lt, gt
 
 fills = []
 markets = {}
@@ -31,34 +32,19 @@ def place_order(order: Order):
 
     market = markets[order.market]
 
+    book_type = 'bid' if order.kind == 'ask' else 'ask'
+    comp = lt if order.kind == 'ask' else gt
     while (
-        order.kind == 'ask' and
-        len(market['bid']) > 0 and
-        order.rate < market['bid'][0].rate
+        len(market[book_type]) > 0 and
+        comp(order.rate, market[book_type][0].rate)
     ):
-        if order.amount >= market['bid'][0].amount:
-            o = market['bid'].pop(0)
+        if order.amount >= market[book_type][0].amount:
+            o = market[book_type].pop(0)
             fill_order(True, o)
             fill_order(False, dcs.replace(order, amount=o.amount, rate=o.rate))
             order.amount -= o.amount
         else:
-            o = market['bid'][0]
-            fill_order(True, dcs.replace(o, amount=order.amount))
-            fill_order(False, dcs.replace(order, rate=o.rate))
-            o.amount -= order.amount
-
-    while (
-        order.kind == 'bid' and
-        len(market['ask']) > 0 and
-        order.rate > market['ask'][0].rate
-    ):
-        if order.amount >= market['ask'][0].amount:
-            o = market['ask'].pop(0)
-            fill_order(True, o)
-            fill_order(False, dcs.replace(order, amount=o.amount, rate=o.rate))
-            order.amount -= o.amount
-        else:
-            o = market['ask'][0]
+            o = market[book_type][0]
             fill_order(True, dcs.replace(o, amount=order.amount))
             fill_order(False, dcs.replace(order, rate=o.rate))
             o.amount -= order.amount
