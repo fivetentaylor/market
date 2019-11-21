@@ -2,6 +2,8 @@
 
 A very simple market simulator
 
+It places the whole marketplace in a dictionary
+
 ## Order
 
 ```python
@@ -17,10 +19,16 @@ order = {
 ## Markets
 
 ```python
-markets = {
-  'name': {
-      'asks': [],
-      'bids': [],
-  }, ...
+market = {
+    'BTC-USD': {
+        'ask': [],
+        'bid': [],
+        'fills': [],
+    },
+    'BTC-ETH': {
+        'ask': [],
+        'bid': [],
+        'fills': [],
+    },
 }
 ```

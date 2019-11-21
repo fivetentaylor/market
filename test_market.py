@@ -1,64 +1,64 @@
 import pudb
 import market
+import dataclasses as dcs
 
 def test_place_asks():
-    o1 = market.Order(
+    o = market.Order(
         account = '123',
         kind = 'ask',
-        market = 'test',
+        product = 'test',
         rate = 100.0,
         amount = 5
     )
-    market.place_order(o1)
 
-    market.place_order(market.Order(
-        account = '123',
-        kind = 'ask',
-        market = 'test',
-        rate = 101.0,
-        amount = 5
-    ))
+    m = {}
+    market.place_order(m, o)
+    market.place_order(m, dcs.replace(o, rate=101.0))
+    market.place_order(m, dcs.replace(o, rate=99.0))
 
-    market.place_order(market.Order(
-        account = '123',
-        kind = 'ask',
-        market = 'test',
-        rate = 99.0,
-        amount = 5
-    ))
-
-    m = market.markets['test']['ask']
-    assert(m[0].rate == 99.0)
-    assert(m[1].rate == 100.0)
-    assert(m[2].rate == 101.0)
+    asks = m['test']['ask']
+    assert(asks[0].rate == 99.0)
+    assert(asks[1].rate == 100.0)
+    assert(asks[2].rate == 101.0)
 
 def test_place_bids():
-    market.place_order(market.Order(
+    o = market.Order(
         account = '123',
         kind = 'bid',
-        market = 'test',
+        product = 'test',
         rate = 100.0,
         amount = 5
-    ))
+    )
 
-    market.place_order(market.Order(
+    m = {}
+    market.place_order(m, o)
+    market.place_order(m, dcs.replace(o, rate=101.0))
+    market.place_order(m, dcs.replace(o, rate=99.0))
+
+    bids = m['test']['bid']
+    assert(bids[2].rate == 99.0)
+    assert(bids[1].rate == 100.0)
+    assert(bids[0].rate == 101.0)
+
+def test_fill_orders():
+    bid = market.Order(
         account = '123',
         kind = 'bid',
-        market = 'test',
-        rate = 101.0,
+        product = 'test',
+        rate = 100.0,
         amount = 5
-    ))
+    )
 
-    market.place_order(market.Order(
-        account = '123',
-        kind = 'bid',
-        market = 'test',
-        rate = 99.0,
+    ask = market.Order(
+        account = '456',
+        kind = 'ask',
+        product = 'test',
+        rate = 100.0,
         amount = 5
-    ))
+    )
 
+    m = {}
     pudb.set_trace()
-    m = market.markets['test']['bid']
-    assert(m[2].rate == 99.0)
-    assert(m[1].rate == 100.0)
-    assert(m[0].rate == 101.0)
+    market.place_order(m, bid)
+    market.place_order(m, ask)
+    x = 1
