@@ -1,7 +1,14 @@
 import dataclasses as dcs
 from binsearch import insert
 from operator import le, ge
+from typing import Dict, List
+from enum import Enum, auto
 
+
+class Color(Enum):
+    RED = auto()
+    GREEN = auto()
+    BLUE = auto()
 
 @dcs.dataclass
 class Order:
@@ -20,6 +27,25 @@ class Fill:
     product: str
     rate: float
     amount: float
+
+
+@dcs.dataclass
+class Market:
+    ask: List[Order]
+    bid: List[Order]
+    fills: List[Fill]
+
+
+@dcs.dataclass
+class Balance:
+    product: str
+    balance: float
+
+
+@dcs.dataclass
+class Account:
+    name: str
+    balances: Dict[str, Balance]
 
 
 def fill_order(market: dict, maker: bool, order: Order):

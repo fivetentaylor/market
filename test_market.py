@@ -58,7 +58,7 @@ def test_fill_orders():
     )
 
     m = {}
-    pudb.set_trace()
     market.place_order(m, bid)
     market.place_order(m, ask)
+    pudb.set_trace()
     x = 1
