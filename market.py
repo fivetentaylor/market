@@ -10,6 +10,7 @@ class Color(Enum):
     GREEN = auto()
     BLUE = auto()
 
+
 @dcs.dataclass
 class Order:
     account: str
@@ -31,21 +32,15 @@ class Fill:
 
 @dcs.dataclass
 class Market:
-    ask: List[Order]
-    bid: List[Order]
+    asks: List[Order]
+    bids: List[Order]
     fills: List[Fill]
-
-
-@dcs.dataclass
-class Balance:
-    product: str
-    balance: float
 
 
 @dcs.dataclass
 class Account:
     name: str
-    balances: Dict[str, Balance]
+    balances: Dict[str, float]
 
 
 def fill_order(market: dict, maker: bool, order: Order):
