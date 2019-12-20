@@ -8,7 +8,7 @@ products = ['usd_prod%d' % i for i in range(3)]
 side = ['ask', 'bid']
 
 fills = 0
-for i in range(10000):
+for i in range(100000):
     params = {
         'account': choice(accounts),
         'product': choice(products),
