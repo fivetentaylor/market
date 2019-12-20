@@ -6,12 +6,6 @@ from typing import Dict, List, Union, Literal
 from enum import Enum, auto
 
 
-def fill_order(market: dict, maker: bool, order: dict):
-    fill = deepcopy(order)
-    fill['maker'] = maker
-    market[order['product']]['fills'].append(fill)
-
-
 def place_order(
     market: dict,
     account: str,
@@ -45,12 +39,14 @@ def place_order(
         comp(rate, product[book][0]['rate'])
     ):
         make = deepcopy(product[book][0])
+        make['maker'] = True
         take = deepcopy(order)
+        take['maker'] = False
 
         if take['amount'] < make['amount']:
             # make is partially filled
             make['amount'] = take['amount']
-            product[book][0]['amount'] -= amount
+            product[book][0]['amount'] -= take['amount']
             order['amount'] = 0
         else:
             # make is completely filled
@@ -59,8 +55,7 @@ def place_order(
             order['amount'] -= make['amount']
 
         take['rate'] = make['rate']
-        fill_order(market, True, make)
-        fill_order(market, False, take)
+        yield [make, take]
 
     if order['amount'] > 0:
         book = '%ss' % kind
