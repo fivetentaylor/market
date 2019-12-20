@@ -5,8 +5,12 @@ verify_ssl = true
 
 [dev-packages]
 autopep8 = "*"
+pytest = "*"
+pudb = "*"
+pytest-pudb = "*"
+ipython = "*"
 
 [packages]
 
 [requires]
-python_version = "3.7"
+python_version = "3.8"
