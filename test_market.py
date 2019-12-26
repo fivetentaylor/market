@@ -5,7 +5,7 @@ from copy import deepcopy
 def test_place_asks():
     o = {
         'account': '123',
-        'kind': 'ask',
+        'side': 'ask',
         'product': 'test',
         'rate': 100.0,
         'amount': 5,
@@ -16,9 +16,9 @@ def test_place_asks():
     for rate in rates:
         o = deepcopy(o)
         o['rate'] = rate
-        market.place_order(m, **o)
+        list(market.place_order(m, **o))
 
-    asks = m['test']['asks']
+    asks = m['products']['test']['asks']
     assert(asks[0]['rate'] == 99.0)
     assert(asks[1]['rate'] == 100.0)
     assert(asks[2]['rate'] == 101.0)
@@ -26,7 +26,7 @@ def test_place_asks():
 def test_place_bids():
     o = {
         'account': '123',
-        'kind': 'bid',
+        'side': 'bid',
         'product': 'test',
         'rate': 100.0,
         'amount': 5,
@@ -37,9 +37,9 @@ def test_place_bids():
     for rate in rates:
         o = deepcopy(o)
         o['rate'] = rate
-        market.place_order(m, **o)
+        list(market.place_order(m, **o))
 
-    bids = m['test']['bids']
+    bids = m['products']['test']['bids']
     assert(bids[2]['rate'] == 99.0)
     assert(bids[1]['rate'] == 100.0)
     assert(bids[0]['rate'] == 101.0)
@@ -47,7 +47,7 @@ def test_place_bids():
 def test_fill_orders():
     bid = {
         'account': '123',
-        'kind': 'bid',
+        'side': 'bid',
         'product': 'test',
         'rate': 100.0,
         'amount': 5,
@@ -55,13 +55,13 @@ def test_fill_orders():
 
     ask = {
         'account': '456',
-        'kind': 'ask',
+        'side': 'ask',
         'product': 'test',
         'rate': 100.0,
         'amount': 5,
     }
 
     m = {}
-    market.place_order(m, **bid)
-    market.place_order(m, **ask)
+    list(market.place_order(m, **bid))
+    list(market.place_order(m, **ask))
     x = 1
