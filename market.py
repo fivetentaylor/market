@@ -2,7 +2,30 @@ from copy import deepcopy
 from binsearch import insert
 from operator import le, ge
 from typing import Dict, List, Union, Literal
-from enum import Enum, auto
+
+
+def market_defaults(market: dict, account: str, product: str):
+    accounts = market.setdefault('accounts', {})
+    accounts.setdefault(account, {
+        'balances': {},
+        'orders': {},
+    })
+
+    products = market.setdefault('products', {})
+    prod = products.setdefault(product, {
+        'asks': [],
+        'bids': [],
+    })
+
+    return market
+
+
+def add_funds(market: dict, account: str, product: str, amount: float):
+    if amount <= 0:
+        raise ValueError('Amount must be greater than 0')
+    market_defaults(market, account, product)
+    balances = market['accounts'][account]['balances']
+    balances[product] = balances.get(product, 0) + amount
 
 
 def place_order(
@@ -13,17 +36,12 @@ def place_order(
     rate: float,
     amount: float
 ):
-    products = market.setdefault('products', {})
-    prod = products.setdefault(product, {
-        'asks': [],
-        'bids': [],
-    })
+    market_defaults(market, account, product)
+    prod = market['products'][product]
 
-    accounts = market.setdefault('accounts', {})
-    accounts.setdefault(account, {
-        'balances': {},
-        'orders': {},
-    })
+    balance = market['accounts'][account]['balances'].get(product, 0)
+    if amount:
+        pass
 
     order = {
         'account': account,

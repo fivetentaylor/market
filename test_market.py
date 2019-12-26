@@ -65,3 +65,10 @@ def test_fill_orders():
     list(market.place_order(m, **bid))
     list(market.place_order(m, **ask))
     x = 1
+
+def test_add_funds():
+    m = {}
+    market.add_funds(m, 'acct0', 'prod0', 101.0)
+    market.add_funds(m, 'acct1', 'prod0', 105.0)
+    #pudb.set_trace()
+    x = 0

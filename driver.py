@@ -12,7 +12,7 @@ for i in range(100000):
     params = {
         'account': choice(accounts),
         'product': choice(products),
-        'kind': choice(side),
+        'side': choice(side),
         'rate': random() * 100,
         'amount': random() * 100,
     }
