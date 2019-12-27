@@ -6,7 +6,7 @@ from operator import le, ge
 from typing import Dict, List, Union, Literal, Tuple
 
 
-def account_defaults(exchange: dict, account: str):
+def _account_defaults(exchange: dict, account: str):
     accounts = exchange.setdefault('accounts', {})
     accounts.setdefault(account, {
         'balances': {},
@@ -16,7 +16,7 @@ def account_defaults(exchange: dict, account: str):
     return exchange
 
 
-def market_defaults(exchange: dict, market: str):
+def _market_defaults(exchange: dict, market: str):
     markets = exchange.setdefault('markets', {})
     markets.setdefault(market, {
         'asks': [],
@@ -29,9 +29,42 @@ def market_defaults(exchange: dict, market: str):
 def add_funds(exchange: dict, account: str, product: str, amount: float):
     if amount <= 0:
         raise ValueError('Amount must be greater than 0')
-    account_defaults(exchange, account)
+    _account_defaults(exchange, account)
     balances = exchange['accounts'][account]['balances']
     balances[product] = balances.get(product, 0) + amount
+
+
+def _verify_holdings(
+    exchange: dict,
+    account: str,
+    market: str,
+    side: Union[Literal['ask'], Literal['bid']],
+    rate: float,
+    amount: float
+):
+    pass
+
+
+def _fill_orders(
+    exchange: dict,
+    account: str,
+    market: str,
+    side: Union[Literal['ask'], Literal['bid']],
+    rate: float,
+    amount: float
+):
+    pass
+
+
+def _update_holdings(
+    exchange: dict,
+    account: str,
+    market: str,
+    side: Union[Literal['ask'], Literal['bid']],
+    rate: float,
+    amount: float
+):
+    pass
 
 
 def place_order(
@@ -44,8 +77,8 @@ def place_order(
 ):
     # set defaults, verify holdings, fill any orders, update holdings, insert remaining order
 
-    account_defaults(exchange, account)
-    market_defaults(exchange, market)
+    _account_defaults(exchange, account)
+    _market_defaults(exchange, market)
     mrkt = exchange['markets'][market]
 
     left, right = market.split('-')
@@ -53,6 +86,9 @@ def place_order(
     balance = exchange['accounts'][account]['balances'].get(product, 0)
     if amount * rate > balance:
         raise ValueError('Insuficient funds to cover amount * rate = %f' % (amount * rate))
+    else:
+        # update holdings
+        pass
 
     order = {
         'account': account,
