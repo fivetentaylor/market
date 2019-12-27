@@ -1,51 +1,62 @@
+import pudb
+
 from copy import deepcopy
 from binsearch import insert
 from operator import le, ge
-from typing import Dict, List, Union, Literal
+from typing import Dict, List, Union, Literal, Tuple
 
 
-def market_defaults(market: dict, account: str, product: str):
-    accounts = market.setdefault('accounts', {})
+def account_defaults(exchange: dict, account: str):
+    accounts = exchange.setdefault('accounts', {})
     accounts.setdefault(account, {
         'balances': {},
         'orders': {},
     })
 
-    products = market.setdefault('products', {})
-    prod = products.setdefault(product, {
+    return exchange
+
+
+def market_defaults(exchange: dict, market: str):
+    markets = exchange.setdefault('markets', {})
+    markets.setdefault(market, {
         'asks': [],
         'bids': [],
     })
 
-    return market
+    return exchange
 
 
-def add_funds(market: dict, account: str, product: str, amount: float):
+def add_funds(exchange: dict, account: str, product: str, amount: float):
     if amount <= 0:
         raise ValueError('Amount must be greater than 0')
-    market_defaults(market, account, product)
-    balances = market['accounts'][account]['balances']
+    account_defaults(exchange, account)
+    balances = exchange['accounts'][account]['balances']
     balances[product] = balances.get(product, 0) + amount
 
 
 def place_order(
-    market: dict,
+    exchange: dict,
     account: str,
-    product: str,
+    market: str,
     side: Union[Literal['ask'], Literal['bid']],
     rate: float,
     amount: float
 ):
-    market_defaults(market, account, product)
-    prod = market['products'][product]
+    # set defaults, verify holdings, fill any orders, update holdings, insert remaining order
 
-    balance = market['accounts'][account]['balances'].get(product, 0)
-    if amount:
-        pass
+    account_defaults(exchange, account)
+    market_defaults(exchange, market)
+    mrkt = exchange['markets'][market]
+
+    left, right = market.split('-')
+    product = left if side == 'ask' else right
+    balance = exchange['accounts'][account]['balances'].get(product, 0)
+    if amount * rate > balance:
+        raise ValueError('Insuficient funds to cover amount * rate = %f' % (amount * rate))
 
     order = {
         'account': account,
-        'product': product,
+        'market': market,
         'side': side,
         'rate': rate,
         'amount': amount,
@@ -54,11 +65,11 @@ def place_order(
     book = 'bids' if side == 'ask' else 'asks'
     comp = le if side == 'ask' else ge
     while (
-        len(prod[book]) > 0 and
+        len(mrkt[book]) > 0 and
         order['amount'] > 0 and
-        comp(rate, prod[book][0]['rate'])
+        comp(rate, mrkt[book][0]['rate'])
     ):
-        make = deepcopy(prod[book][0])
+        make = deepcopy(mrkt[book][0])
         make['maker'] = True
         take = deepcopy(order)
         take['maker'] = False
@@ -66,12 +77,12 @@ def place_order(
         if take['amount'] < make['amount']:
             # make is partially filled
             make['amount'] = take['amount']
-            prod[book][0]['amount'] -= take['amount']
+            mrkt[book][0]['amount'] -= take['amount']
             order['amount'] = 0
         else:
             # make is completely filled
             take['amount'] = make['amount']
-            prod[book].pop(0)
+            mrkt[book].pop(0)
             order['amount'] -= make['amount']
 
         take['rate'] = make['rate']
@@ -81,7 +92,7 @@ def place_order(
         book = '%ss' % side
         insert(
             order,
-            prod[book],
+            mrkt[book],
             key=lambda m: m['rate'],
             reverse=book == 'bids',
         )
