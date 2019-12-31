@@ -109,6 +109,9 @@ def _insert_order(
     exchange: dict,
     order: dict
 ):
+    if order['size'] <= 0:
+        return None
+
     book = '%ss' % order['side']
     mrkt = exchange['markets'][order['market']]
 
@@ -122,7 +125,7 @@ def _insert_order(
     return deepcopy(order)
 
 
-def place_order(
+def create_order(
     exchange: dict,
     account: str,
     market: str,
@@ -144,9 +147,9 @@ def place_order(
     }
     _verify_holdings(exchange, order)
 
+    fills = []
     for make, take in _fill_orders(exchange, order):
-        yield _update_holdings(exchange, make)
-        yield _update_holdings(exchange, take)
+        fills.append(_update_holdings(exchange, make))
+        fills.append(_update_holdings(exchange, take))
 
-    if order['size'] > 0:
-        yield _insert_order(exchange, order)
+    return _insert_order(exchange, order), fills

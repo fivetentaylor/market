@@ -12,7 +12,7 @@ side = ['ask', 'bid']
 for account, product in it.product(accounts, products):
     market.add_funds(exchange, account, product, 10000)
 
-fills = 0
+fill_count = 0
 for i in range(1000):
     params = {
         'account': choice(accounts),
@@ -21,11 +21,12 @@ for i in range(1000):
         'rate': random() * 10,
         'size': random() * 10,
     }
-    for fill in market.place_order(exchange, **params):
-        fills += 1
+    order, fills = market.create_order(exchange, **params)
+    for fill in fills:
+        fill_count += 1
         if fill['size'] <= 0:
             raise Exception('invalid size!!!')
         print(json.dumps(fill))
 
-print('%d orders filled' % fills)
+print('%d orders filled' % fill_count)
 # print(json.dumps(exchange))

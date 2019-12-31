@@ -2,7 +2,7 @@ import pudb
 import market
 from copy import deepcopy
 
-def test_place_asks():
+def test_create_asks():
     o = {
         'account': '123',
         'side': 'ask',
@@ -19,7 +19,7 @@ def test_place_asks():
     for rate in rates:
         o = deepcopy(o)
         o['rate'] = rate
-        list(market.place_order(m, **o))
+        market.create_order(m, **o)
 
     asks = m['markets']['A-B']['asks']
     assert(asks[0]['rate'] == 99.0)
@@ -28,7 +28,7 @@ def test_place_asks():
 
     assert(m['accounts']['123']['balances']['A'] == 10000 - sum(rates) * 5)
 
-def test_place_bids():
+def test_create_bids():
     o = {
         'account': '123',
         'side': 'bid',
@@ -45,7 +45,7 @@ def test_place_bids():
     for rate in rates:
         o = deepcopy(o)
         o['rate'] = rate
-        list(market.place_order(m, **o))
+        market.create_order(m, **o)
 
     bids = m['markets']['A-B']['bids']
     assert(bids[2]['rate'] == 99.0)
@@ -78,11 +78,11 @@ def test_fill_orders():
     assert(m['accounts']['123']['balances']['B'] == 10000)
     assert(m['accounts']['456']['balances']['A'] == 10000)
 
-    list(market.place_order(m, **bid))
+    market.create_order(m, **bid)
 
     assert(m['accounts']['123']['balances']['B'] == 10000 - 500.0)
 
-    list(market.place_order(m, **ask))
+    market.create_order(m, **ask)
 
     assert(m['accounts']['123']['balances']['A'] == 500)
     assert(m['accounts']['456']['balances']['B'] == 500)
