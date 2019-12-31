@@ -8,7 +8,7 @@ def test_place_asks():
         'side': 'ask',
         'market': 'A-B',
         'rate': 100.0,
-        'amount': 5,
+        'size': 5,
     }
 
     m = {}
@@ -32,7 +32,7 @@ def test_place_bids():
         'side': 'bid',
         'market': 'A-B',
         'rate': 100.0,
-        'amount': 5,
+        'size': 5,
     }
 
     m = {}
@@ -56,7 +56,7 @@ def test_fill_orders():
         'side': 'bid',
         'market': 'A-B',
         'rate': 100.0,
-        'amount': 5,
+        'size': 5,
     }
 
     ask = {
@@ -64,7 +64,7 @@ def test_fill_orders():
         'side': 'ask',
         'market': 'A-B',
         'rate': 100.0,
-        'amount': 5,
+        'size': 5,
     }
 
     m = {}

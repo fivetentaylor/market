@@ -26,12 +26,12 @@ def _market_defaults(exchange: dict, market: str):
     return exchange
 
 
-def add_funds(exchange: dict, account: str, product: str, amount: float):
-    if amount <= 0:
-        raise ValueError('Amount must be greater than 0')
+def add_funds(exchange: dict, account: str, product: str, size: float):
+    if size <= 0:
+        raise ValueError('size must be greater than 0')
     _account_defaults(exchange, account)
     balances = exchange['accounts'][account]['balances']
-    balances[product] = balances.get(product, 0) + amount
+    balances[product] = balances.get(product, 0) + size
 
 
 def _verify_holdings(
@@ -40,7 +40,7 @@ def _verify_holdings(
     market: str,
     side: Union[Literal['ask'], Literal['bid']],
     rate: float,
-    amount: float
+    size: float
 ):
     pass
 
@@ -51,7 +51,7 @@ def _fill_orders(
     market: str,
     side: Union[Literal['ask'], Literal['bid']],
     rate: float,
-    amount: float
+    size: float
 ):
     pass
 
@@ -62,7 +62,7 @@ def _update_holdings(
     market: str,
     side: Union[Literal['ask'], Literal['bid']],
     rate: float,
-    amount: float
+    size: float
 ):
     pass
 
@@ -73,7 +73,7 @@ def place_order(
     market: str,
     side: Union[Literal['ask'], Literal['bid']],
     rate: float,
-    amount: float
+    size: float
 ):
     # set defaults, verify holdings, fill any orders, update holdings, insert remaining order
 
@@ -84,8 +84,8 @@ def place_order(
     left, right = market.split('-')
     product = left if side == 'ask' else right
     balance = exchange['accounts'][account]['balances'].get(product, 0)
-    if amount * rate > balance:
-        raise ValueError('Insuficient funds to cover amount * rate = %f' % (amount * rate))
+    if size * rate > balance:
+        raise ValueError('Insuficient funds to cover size * rate = %f' % (size * rate))
     else:
         # update holdings
         pass
@@ -95,14 +95,14 @@ def place_order(
         'market': market,
         'side': side,
         'rate': rate,
-        'amount': amount,
+        'size': size,
     }
 
     book = 'bids' if side == 'ask' else 'asks'
     comp = le if side == 'ask' else ge
     while (
         len(mrkt[book]) > 0 and
-        order['amount'] > 0 and
+        order['size'] > 0 and
         comp(rate, mrkt[book][0]['rate'])
     ):
         make = deepcopy(mrkt[book][0])
@@ -110,21 +110,21 @@ def place_order(
         take = deepcopy(order)
         take['maker'] = False
 
-        if take['amount'] < make['amount']:
+        if take['size'] < make['size']:
             # make is partially filled
-            make['amount'] = take['amount']
-            mrkt[book][0]['amount'] -= take['amount']
-            order['amount'] = 0
+            make['size'] = take['size']
+            mrkt[book][0]['size'] -= take['size']
+            order['size'] = 0
         else:
             # make is completely filled
-            take['amount'] = make['amount']
+            take['size'] = make['size']
             mrkt[book].pop(0)
-            order['amount'] -= make['amount']
+            order['size'] -= make['size']
 
         take['rate'] = make['rate']
         yield [make, take]
 
-    if order['amount'] > 0:
+    if order['size'] > 0:
         book = '%ss' % side
         insert(
             order,
