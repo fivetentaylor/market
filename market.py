@@ -97,7 +97,7 @@ def _update_holdings(
     )(fill)
 
     left, right = market.split('-')
-    product = left if side == 'ask' else right
+    product = left if side == 'bid' else right
     balance = exchange['accounts'][account]['balances'].setdefault(product, 0)
 
     exchange['accounts'][account]['balances'][product] += rate * size

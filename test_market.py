@@ -26,6 +26,8 @@ def test_place_asks():
     assert(asks[1]['rate'] == 100.0)
     assert(asks[2]['rate'] == 101.0)
 
+    assert(m['accounts']['123']['balances']['A'] == 10000 - sum(rates) * 5)
+
 def test_place_bids():
     o = {
         'account': '123',
@@ -50,6 +52,8 @@ def test_place_bids():
     assert(bids[1]['rate'] == 100.0)
     assert(bids[0]['rate'] == 101.0)
 
+    assert(m['accounts']['123']['balances']['B'] == 10000 - sum(rates) * 5)
+
 def test_fill_orders():
     bid = {
         'account': '123',
@@ -71,13 +75,22 @@ def test_fill_orders():
     market.add_funds(m, '123', 'B', 10000)
     market.add_funds(m, '456', 'A', 10000)
 
+    assert(m['accounts']['123']['balances']['B'] == 10000)
+    assert(m['accounts']['456']['balances']['A'] == 10000)
+
     list(market.place_order(m, **bid))
+
+    assert(m['accounts']['123']['balances']['B'] == 10000 - 500.0)
+
     list(market.place_order(m, **ask))
-    x = 1
+
+    assert(m['accounts']['123']['balances']['A'] == 500)
+    assert(m['accounts']['456']['balances']['B'] == 500)
 
 def test_add_funds():
     m = {}
     market.add_funds(m, 'acct0', 'prod0', 101.0)
     market.add_funds(m, 'acct1', 'prod0', 105.0)
-    #pudb.set_trace()
-    x = 0
+
+    assert(m['accounts']['acct0']['balances']['prod0'] == 101.0)
+    assert(m['accounts']['acct1']['balances']['prod0'] == 105.0)
