@@ -23,7 +23,7 @@ for i in range(1000):
     }
     for fill in market.place_order(exchange, **params):
         fills += 1
-        if fill[0]['size'] <= 0:
+        if fill['size'] <= 0:
             raise Exception('invalid size!!!')
         print(json.dumps(fill))
 

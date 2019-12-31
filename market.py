@@ -58,24 +58,68 @@ def _verify_holdings(
 
 def _fill_orders(
     exchange: dict,
-    account: str,
-    market: str,
-    side: Union[Literal['ask'], Literal['bid']],
-    rate: float,
-    size: float
+    order: dict
 ):
-    pass
+    mrkt = exchange['markets'][order['market']]
+    book = 'bids' if order['side'] == 'ask' else 'asks'
+    comp = le if order['side'] == 'ask' else ge
+    while (
+        len(mrkt[book]) > 0 and
+        order['size'] > 0 and
+        comp(order['rate'], mrkt[book][0]['rate'])
+    ):
+        make = deepcopy(mrkt[book][0])
+        make['maker'] = True
+        take = deepcopy(order)
+        take['maker'] = False
+
+        if take['size'] < make['size']:
+            # make is partially filled
+            make['size'] = take['size']
+            mrkt[book][0]['size'] -= take['size']
+            order['size'] = 0
+        else:
+            # make is completely filled
+            take['size'] = make['size']
+            mrkt[book].pop(0)
+            order['size'] -= make['size']
+
+        take['rate'] = make['rate']
+        yield [make, take]
 
 
 def _update_holdings(
     exchange: dict,
-    account: str,
-    market: str,
-    side: Union[Literal['ask'], Literal['bid']],
-    rate: float,
-    size: float
+    fill: dict
 ):
-    pass
+    account, market, side, rate, size, maker = itemgetter(
+        'account', 'market', 'side', 'rate', 'size', 'maker'
+    )(fill)
+
+    left, right = market.split('-')
+    product = left if side == 'ask' else right
+    balance = exchange['accounts'][account]['balances'].setdefault(product, 0)
+
+    exchange['accounts'][account]['balances'][product] += rate * size
+
+    return deepcopy(fill)
+
+
+def _insert_order(
+    exchange: dict,
+    order: dict
+):
+    book = '%ss' % order['side']
+    mrkt = exchange['markets'][order['market']]
+
+    insert(
+        order,
+        mrkt[book],
+        key=lambda m: m['rate'],
+        reverse=book == 'bids',
+    )
+
+    return deepcopy(order)
 
 
 def place_order(
@@ -100,38 +144,9 @@ def place_order(
     }
     _verify_holdings(exchange, order)
 
-    mrkt = exchange['markets'][market]
-    book = 'bids' if side == 'ask' else 'asks'
-    comp = le if side == 'ask' else ge
-    while (
-        len(mrkt[book]) > 0 and
-        order['size'] > 0 and
-        comp(rate, mrkt[book][0]['rate'])
-    ):
-        make = deepcopy(mrkt[book][0])
-        make['maker'] = True
-        take = deepcopy(order)
-        take['maker'] = False
-
-        if take['size'] < make['size']:
-            # make is partially filled
-            make['size'] = take['size']
-            mrkt[book][0]['size'] -= take['size']
-            order['size'] = 0
-        else:
-            # make is completely filled
-            take['size'] = make['size']
-            mrkt[book].pop(0)
-            order['size'] -= make['size']
-
-        take['rate'] = make['rate']
-        yield [make, take]
+    for make, take in _fill_orders(exchange, order):
+        yield _update_holdings(exchange, make)
+        yield _update_holdings(exchange, take)
 
     if order['size'] > 0:
-        book = '%ss' % side
-        insert(
-            order,
-            mrkt[book],
-            key=lambda m: m['rate'],
-            reverse=book == 'bids',
-        )
+        yield _insert_order(exchange, order)
