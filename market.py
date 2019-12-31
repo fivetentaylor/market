@@ -2,7 +2,7 @@ import pudb
 
 from copy import deepcopy
 from binsearch import insert
-from operator import le, ge
+from operator import le, ge, itemgetter
 from typing import Dict, List, Union, Literal, Tuple
 
 
@@ -36,13 +36,24 @@ def add_funds(exchange: dict, account: str, product: str, size: float):
 
 def _verify_holdings(
     exchange: dict,
-    account: str,
-    market: str,
-    side: Union[Literal['ask'], Literal['bid']],
-    rate: float,
-    size: float
+    order: dict
 ):
-    pass
+    account, market, side, rate, size = itemgetter(
+        'account', 'market', 'side', 'rate', 'size'
+    )(order)
+
+    left, right = market.split('-')
+    product = left if side == 'ask' else right
+    balance = exchange['accounts'][account]['balances'].setdefault(product, 0)
+    if size * rate > balance:
+        raise ValueError(
+            ('Account %s has ' +
+            'insuficient funds %f in %s ' +
+            'to cover size * rate = %f') %
+            (account, balance, product, size * rate)
+        )
+    else:
+        exchange['accounts'][account]['balances'][product] -= rate * size
 
 
 def _fill_orders(
@@ -79,16 +90,6 @@ def place_order(
 
     _account_defaults(exchange, account)
     _market_defaults(exchange, market)
-    mrkt = exchange['markets'][market]
-
-    left, right = market.split('-')
-    product = left if side == 'ask' else right
-    balance = exchange['accounts'][account]['balances'].get(product, 0)
-    if size * rate > balance:
-        raise ValueError('Insuficient funds to cover size * rate = %f' % (size * rate))
-    else:
-        # update holdings
-        pass
 
     order = {
         'account': account,
@@ -97,7 +98,9 @@ def place_order(
         'rate': rate,
         'size': size,
     }
+    _verify_holdings(exchange, order)
 
+    mrkt = exchange['markets'][market]
     book = 'bids' if side == 'ask' else 'asks'
     comp = le if side == 'ask' else ge
     while (
