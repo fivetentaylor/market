@@ -1,5 +1,6 @@
 import pudb
 
+from uuid import uuid4
 from copy import deepcopy
 from binsearch import insert
 from operator import le, ge, itemgetter
@@ -139,6 +140,7 @@ def create_order(
     _market_defaults(exchange, market)
 
     order = {
+        'id': str(uuid4()),
         'account': account,
         'market': market,
         'side': side,
