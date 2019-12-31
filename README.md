@@ -35,3 +35,17 @@ exchange = {
 - Create order and cancel order APIs
 - Emit events equivalent to the [level2 channel](https://docs.pro.coinbase.com/#the-level2-channel) and the [user channel](https://docs.pro.coinbase.com/#the-user-channel)
 - Create client to place/cancel orders and maintain orderbook + account balance given event streams
+
+## Modelling Thoughts
+
+- Our target is obviously just making more money, so our objective function should reward that
+- We probably need a meta algorithm that removes losing models from the pool... and potentially creates copies of winning models with refreshed holdings...
+- Holdings is just our distribution of money accross each product, and is a fixed width vector for a given model
+- Orders is a variable width vector representing our current orders in each market... should we use some recurrent net to understand them at each decision point?
+- Should we run inference at each market event? Or at some fixed time interval?
+- The model can take a maker, taker or hybrid approach
+- It can predict
+  - [buy, rate, amount, market]
+  - [prod1_amount, prod2_amount, ..., prodN_amount] and then aggresively try to rebalance once it's out of some threshold far enough
+- Marketplaces have higher fees for taker orders vs maker orders, that should be baked into training
+

@@ -125,6 +125,11 @@ def _insert_order(
 
     return deepcopy(order)
 
+def cancel_order(
+    exchange: dict,
+    order_id: str
+):
+    pass
 
 def create_order(
     exchange: dict,
