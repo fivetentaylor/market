@@ -22,9 +22,9 @@ def test_create_asks():
         market.create_order(m, **o)
 
     asks = m['markets']['A-B']['asks']
-    assert(asks[0]['rate'] == 99.0)
-    assert(asks[1]['rate'] == 100.0)
-    assert(asks[2]['rate'] == 101.0)
+    assert(asks[0][0] == 99.0)
+    assert(asks[1][0] == 100.0)
+    assert(asks[2][0] == 101.0)
 
     assert(m['accounts']['123']['balances']['A'] == 10000 - sum(rates) * 5)
 
@@ -48,9 +48,9 @@ def test_create_bids():
         market.create_order(m, **o)
 
     bids = m['markets']['A-B']['bids']
-    assert(bids[2]['rate'] == 99.0)
-    assert(bids[1]['rate'] == 100.0)
-    assert(bids[0]['rate'] == 101.0)
+    assert(bids[2][0] == 99.0)
+    assert(bids[1][0] == 100.0)
+    assert(bids[0][0] == 101.0)
 
     assert(m['accounts']['123']['balances']['B'] == 10000 - sum(rates) * 5)
 

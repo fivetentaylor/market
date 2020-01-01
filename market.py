@@ -11,7 +11,7 @@ def _account_defaults(exchange: dict, account: str):
     accounts = exchange.setdefault('accounts', {})
     accounts.setdefault(account, {
         'balances': {},
-        'orders': {},
+        'orders': [],
     })
 
     return exchange
@@ -64,12 +64,15 @@ def _fill_orders(
     mrkt = exchange['markets'][order['market']]
     book = 'bids' if order['side'] == 'ask' else 'asks'
     comp = le if order['side'] == 'ask' else ge
+
     while (
         len(mrkt[book]) > 0 and
         order['size'] > 0 and
-        comp(order['rate'], mrkt[book][0]['rate'])
+        comp(order['rate'], mrkt[book][0][0])
     ):
-        make = deepcopy(mrkt[book][0])
+        make = deepcopy(
+            exchange['orders'][mrkt[book][0][2]]
+        )
         make['maker'] = True
         take = deepcopy(order)
         take['maker'] = False
@@ -77,7 +80,7 @@ def _fill_orders(
         if take['size'] < make['size']:
             # make is partially filled
             make['size'] = take['size']
-            mrkt[book][0]['size'] -= take['size']
+            mrkt[book][0][1] -= take['size']
             order['size'] = 0
         else:
             # make is completely filled
@@ -113,13 +116,14 @@ def _insert_order(
     if order['size'] <= 0:
         return None
 
+    exchange.setdefault('orders', {})[order['id']] = order
+
     book = '%ss' % order['side']
     mrkt = exchange['markets'][order['market']]
 
     insert(
-        order,
+        itemgetter('rate', 'size', 'id')(order),
         mrkt[book],
-        key=lambda m: m['rate'],
         reverse=book == 'bids',
     )
 
