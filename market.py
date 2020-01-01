@@ -62,30 +62,28 @@ def _fill_orders(
     order: dict
 ):
     mrkt = exchange['markets'][order['market']]
-    book = 'bids' if order['side'] == 'ask' else 'asks'
+    book = mrkt['bids' if order['side'] == 'ask' else 'asks']
     comp = le if order['side'] == 'ask' else ge
 
     while (
-        len(mrkt[book]) > 0 and
+        len(book) > 0 and
         order['size'] > 0 and
-        comp(order['rate'], mrkt[book][0][0])
+        comp(order['rate'], book[0][0])
     ):
-        make = deepcopy(
-            exchange['orders'][mrkt[book][0][2]]
-        )
+        make = deepcopy(exchange['orders'][book[0][2]])
         make['maker'] = True
         take = deepcopy(order)
         take['maker'] = False
 
         if take['size'] < make['size']:
-            # make is partially filled
+            # make partially filled, take completely filled
             make['size'] = take['size']
-            mrkt[book][0][1] -= take['size']
+            book[0][1] -= take['size']
             order['size'] = 0
         else:
-            # make is completely filled
+            # make completely filled, take partially filled
             take['size'] = make['size']
-            mrkt[book].pop(0)
+            book.pop(0)
             order['size'] -= make['size']
 
         take['rate'] = make['rate']
@@ -96,8 +94,8 @@ def _update_holdings(
     exchange: dict,
     fill: dict
 ):
-    account, market, side, rate, size, maker = itemgetter(
-        'account', 'market', 'side', 'rate', 'size', 'maker'
+    order_id, account, market, side, rate, size, maker = itemgetter(
+        'id', 'account', 'market', 'side', 'rate', 'size', 'maker'
     )(fill)
 
     left, right = market.split('-')
