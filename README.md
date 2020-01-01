@@ -40,8 +40,11 @@ exchange = {
 
 - Our target is obviously just making more money, so our objective function should reward that
 - We probably need a meta algorithm that removes losing models from the pool... and potentially creates copies of winning models with refreshed holdings...
-- Holdings is just our distribution of money accross each product, and is a fixed width vector for a given model
-- Orders is a variable width vector representing our current orders in each market... should we use some recurrent net to understand them at each decision point?
+- **Data**
+  - Holdings is just our distribution of money across each product, and is a fixed width vector for a given model
+  - Orders is a variable width vector representing our current orders in each market... should we use some recurrent net to understand them at each decision point?
+  - Orderbook represents the current supply and demand of the market and is a large variable size tensor shaped (2, 2, N)
+  - Recent events? Orders and fills over some recent period or fixed number like the last 10k events that lead to the current order book?
 - Should we run inference at each market event? Or at some fixed time interval?
 - The model can take a maker, taker or hybrid approach
 - It can predict
