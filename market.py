@@ -94,9 +94,16 @@ def _update_holdings(
     exchange: dict,
     fill: dict
 ):
-    order_id, account, market, side, rate, size, maker = itemgetter(
+    oid, account, market, side, rate, size, maker = itemgetter(
         'id', 'account', 'market', 'side', 'rate', 'size', 'maker'
     )(fill)
+
+    if maker:
+        orders = exchange['orders']
+        orders[oid]['size'] -= size
+
+        if orders[oid]['size'] == 0:
+            del orders[oid]
 
     left, right = market.split('-')
     product = left if side == 'bid' else right
