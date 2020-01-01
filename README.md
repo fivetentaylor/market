@@ -32,6 +32,7 @@ exchange = {
 ## TODO
 
 - Convert and properly handle internal precision for each product
+- I think math is probably wrong between products, probably easy fix
 - Create order and cancel order APIs
 - Emit events equivalent to the [level2 channel](https://docs.pro.coinbase.com/#the-level2-channel) and the [user channel](https://docs.pro.coinbase.com/#the-user-channel)
 - Create client to place/cancel orders and maintain orderbook + account balance given event streams

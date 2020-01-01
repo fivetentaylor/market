@@ -2,7 +2,7 @@ import pudb
 
 from uuid import uuid4
 from copy import deepcopy
-from binsearch import insert
+from binsearch import insert, bisect
 from operator import le, ge, itemgetter
 from typing import Dict, List, Union, Literal, Tuple
 
@@ -134,11 +134,38 @@ def _insert_order(
 
     return deepcopy(order)
 
+
 def cancel_order(
     exchange: dict,
     order_id: str
 ):
-    pass
+    # remove order from exchange
+    order = exchange['orders'].pop(order_id)
+
+    aid, market, side, rate, size = itemgetter(
+        'account', 'market', 'side', 'rate', 'size'
+    )(order)
+
+    # remove order from book
+    book = exchange['markets'][market]['%ss' % side]
+    ix = bisect([rate], book, key=lambda o: o[0], reverse=side == 'bid')
+    for i in range(ix, len(book)):
+        if book[i][0] > rate:
+            break
+
+        # this is okay since we break right after deleting
+        if book[i][2] == order_id:
+            del book[i]
+            break
+
+    # return funds to account holdings
+    account = exchange['accounts'][aid]
+
+    left, right = market.split('-')
+    product = left if side == 'ask' else right
+
+    account[product] += rate * size
+
 
 def create_order(
     exchange: dict,
@@ -148,8 +175,6 @@ def create_order(
     rate: float,
     size: float
 ):
-    # set defaults, verify holdings, fill any orders, update holdings, insert remaining order
-
     _account_defaults(exchange, account)
     _market_defaults(exchange, market)
 

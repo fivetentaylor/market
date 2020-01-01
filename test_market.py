@@ -94,3 +94,21 @@ def test_add_funds():
 
     assert(m['accounts']['acct0']['balances']['prod0'] == 101.0)
     assert(m['accounts']['acct1']['balances']['prod0'] == 105.0)
+
+def test_cancel_order():
+    o = {
+        'account': '123',
+        'side': 'ask',
+        'market': 'A-B',
+        'rate': 100.0,
+        'size': 5,
+    }
+
+    m = {}
+
+    market.add_funds(m, '123', 'A', 10000)
+    order, _ = market.create_order(m, **o)
+
+    pudb.set_trace()
+    market.cancel_order(m, order['id'])
+    x = 0
