@@ -80,11 +80,17 @@ def _fill_orders(
             make['size'] = take['size']
             book[0][1] -= take['size']
             order['size'] = 0
+
+            make['complete'] = False
+            take['complete'] = True
         else:
             # make completely filled, take partially filled
             take['size'] = make['size']
             book.pop(0)
             order['size'] -= make['size']
+
+            make['complete'] = True
+            take['complete'] = False
 
         take['rate'] = make['rate']
         yield [make, take]

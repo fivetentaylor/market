@@ -13,7 +13,7 @@ for account, product in it.product(accounts, products):
     market.add_funds(exchange, account, product, 10000)
 
 fill_count = 0
-for i in range(1000):
+for i in range(10000):
     params = {
         'account': choice(accounts),
         'market': choice(markets),
