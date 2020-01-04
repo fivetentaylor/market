@@ -127,7 +127,7 @@ def _insert_order(
     mrkt = exchange['markets'][order['market']]
 
     insert(
-        itemgetter('rate', 'size', 'id')(order),
+        list(itemgetter('rate', 'size', 'id')(order)),
         mrkt[book],
         reverse=book == 'bids',
     )
