@@ -148,7 +148,7 @@ def cancel_order(
 
     # remove order from book
     book = exchange['markets'][market]['%ss' % side]
-    ix = bisect([rate], book, key=lambda o: o[0], reverse=side == 'bid')
+    ix = bisect(rate, book, key=lambda o: o[0], reverse=side == 'bid')
     for i in range(ix, len(book)):
         if book[i][0] > rate:
             break
