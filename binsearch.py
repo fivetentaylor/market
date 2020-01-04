@@ -1,6 +1,6 @@
 from operator import gt, lt, ge, le
 
-def bisect(val, array, left=True, key=lambda x: x, reverse=False):
+def bisect(val, array, key=lambda x: x, left=True, reverse=False):
     '''return the index of the first item >= key(val)'''
     if len(array) == 0: return 0
 
@@ -12,7 +12,7 @@ def bisect(val, array, left=True, key=lambda x: x, reverse=False):
         if r - l == 1: return tmp
         l, r = sorted((ix, tmp))
 
-def insert(val, array, left=True, key=lambda x: x, reverse=False):
-    i = bisect(key(val), array, left, key, reverse)
+def insert(val, array, key=lambda x: x, left=True, reverse=False):
+    i = bisect(key(val), array, key=key, left=left, reverse=reverse)
     array.insert(i, val)
     return array

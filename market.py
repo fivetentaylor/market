@@ -164,7 +164,7 @@ def cancel_order(
     left, right = market.split('-')
     product = left if side == 'ask' else right
 
-    account[product] += rate * size
+    account['balances'][product] += rate * size
 
 
 def create_order(

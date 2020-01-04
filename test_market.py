@@ -109,6 +109,6 @@ def test_cancel_order():
     market.add_funds(m, '123', 'A', 10000)
     order, _ = market.create_order(m, **o)
 
-    pudb.set_trace()
+    # pudb.set_trace()
     market.cancel_order(m, order['id'])
     x = 0
