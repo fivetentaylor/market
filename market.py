@@ -1,5 +1,3 @@
-import pudb
-
 from uuid import uuid4
 from copy import deepcopy
 from binsearch import insert, bisect
@@ -7,37 +5,37 @@ from operator import le, ge, itemgetter
 from typing import Dict, List, Union, Literal, Tuple
 
 
-def _account_defaults(exchange: dict, account: str):
-    accounts = exchange.setdefault('accounts', {})
+def _account_defaults(market: dict, account: str):
+    accounts = market.setdefault('accounts', {})
     accounts.setdefault(account, {
         'balances': {},
         'orders': [],
     })
 
-    return exchange
+    return market
 
 
-def _product_defaults(exchange: dict, product: str):
-    products = exchange.setdefault('products', {})
+def _product_defaults(market: dict, product: str):
+    products = market.setdefault('products', {})
     products.setdefault(product, {
         'asks': [],
         'bids': [],
     })
 
-    return exchange
+    return market
 
 
 def _add_currency(
-    exchange: dict,
+    market: dict,
     cur_id: str,
     name: str,
     min_size: str
 ):
-    pass
+    return market
 
 
 def _add_product(
-    exchange: dict,
+    market: dict,
     prod_id: str,
     base_currency: str,
     quote_currency: str,
@@ -45,7 +43,7 @@ def _add_product(
     base_max_size: str,
     quote_increment: str
 ):
-    products = exchange.setdefault('products', {})
+    products = market.setdefault('products', {})
     products[prod_id] = {
         'id': prod_id,
         'base_currency': base_currency,
@@ -55,19 +53,19 @@ def _add_product(
         'quote_increment': quote_increment,
     }
 
-    return exchange
+    return market
 
 
-def add_funds(exchange: dict, account: str, currency: str, size: float):
+def add_funds(market: dict, account: str, currency: str, size: float):
     if size <= 0:
         raise ValueError('size must be greater than 0')
-    _account_defaults(exchange, account)
-    balances = exchange['accounts'][account]['balances']
+    _account_defaults(market, account)
+    balances = market['accounts'][account]['balances']
     balances[currency] = balances.get(currency, 0) + size
 
 
 def _verify_holdings(
-    exchange: dict,
+    market: dict,
     order: dict
 ):
     account, product, side, rate, size = itemgetter(
@@ -76,7 +74,7 @@ def _verify_holdings(
 
     left, right = product.split('-')
     currency = left if side == 'ask' else right
-    balance = exchange['accounts'][account]['balances'].setdefault(currency, 0)
+    balance = market['accounts'][account]['balances'].setdefault(currency, 0)
     if size * rate > balance:
         raise ValueError(
             ('Account %s has ' +
@@ -85,14 +83,14 @@ def _verify_holdings(
             (account, balance, currency, size * rate)
         )
     else:
-        exchange['accounts'][account]['balances'][currency] -= rate * size
+        market['accounts'][account]['balances'][currency] -= rate * size
 
 
 def _fill_orders(
-    exchange: dict,
+    market: dict,
     order: dict
 ):
-    mrkt = exchange['products'][order['product']]
+    mrkt = market['products'][order['product']]
     book = mrkt['bids' if order['side'] == 'ask' else 'asks']
     comp = le if order['side'] == 'ask' else ge
 
@@ -101,7 +99,7 @@ def _fill_orders(
         order['size'] > 0 and
         comp(order['rate'], book[0][0])
     ):
-        make = deepcopy(exchange['orders'][book[0][2]])
+        make = deepcopy(market['orders'][book[0][2]])
         make['maker'] = True
         take = deepcopy(order)
         take['maker'] = False
@@ -128,7 +126,7 @@ def _fill_orders(
 
 
 def _update_holdings(
-    exchange: dict,
+    market: dict,
     fill: dict
 ):
     oid, account, product, side, rate, size, maker = itemgetter(
@@ -136,7 +134,7 @@ def _update_holdings(
     )(fill)
 
     if maker:
-        orders = exchange['orders']
+        orders = market['orders']
         orders[oid]['size'] -= size
 
         if orders[oid]['size'] == 0:
@@ -144,24 +142,24 @@ def _update_holdings(
 
     left, right = product.split('-')
     currency = left if side == 'bid' else right
-    balance = exchange['accounts'][account]['balances'].setdefault(currency, 0)
+    balance = market['accounts'][account]['balances'].setdefault(currency, 0)
 
-    exchange['accounts'][account]['balances'][currency] += rate * size
+    market['accounts'][account]['balances'][currency] += rate * size
 
     return deepcopy(fill)
 
 
 def _insert_order(
-    exchange: dict,
+    market: dict,
     order: dict
 ):
     if order['size'] <= 0:
         return None
 
-    exchange.setdefault('orders', {})[order['id']] = order
+    market.setdefault('orders', {})[order['id']] = order
 
     book = '%ss' % order['side']
-    mrkt = exchange['products'][order['product']]
+    mrkt = market['products'][order['product']]
 
     insert(
         list(itemgetter('rate', 'size', 'id')(order)),
@@ -173,18 +171,18 @@ def _insert_order(
 
 
 def cancel_order(
-    exchange: dict,
+    market: dict,
     order_id: str
 ):
-    # remove order from exchange
-    order = exchange['orders'].pop(order_id)
+    # remove order from market
+    order = market['orders'].pop(order_id)
 
     aid, product, side, rate, size = itemgetter(
         'account', 'product', 'side', 'rate', 'size'
     )(order)
 
     # remove order from book
-    book = exchange['products'][product]['%ss' % side]
+    book = market['products'][product]['%ss' % side]
     ix = bisect(rate, book, key=lambda o: o[0], reverse=side == 'bid')
     for i in range(ix, len(book)):
         if book[i][0] > rate:
@@ -196,7 +194,7 @@ def cancel_order(
             break
 
     # return funds to account holdings
-    account = exchange['accounts'][aid]
+    account = market['accounts'][aid]
 
     left, right = product.split('-')
     currency = left if side == 'ask' else right
@@ -205,15 +203,15 @@ def cancel_order(
 
 
 def create_order(
-    exchange: dict,
+    market: dict,
     account: str,
     product: str,
     side: Union[Literal['ask'], Literal['bid']],
     rate: float,
     size: float
 ):
-    _account_defaults(exchange, account)
-    _product_defaults(exchange, product)
+    _account_defaults(market, account)
+    _product_defaults(market, product)
 
     order = {
         'id': str(uuid4()),
@@ -223,11 +221,11 @@ def create_order(
         'rate': rate,
         'size': size,
     }
-    _verify_holdings(exchange, order)
+    _verify_holdings(market, order)
 
     fills = []
-    for make, take in _fill_orders(exchange, order):
-        fills.append(_update_holdings(exchange, make))
-        fills.append(_update_holdings(exchange, take))
+    for make, take in _fill_orders(market, order):
+        fills.append(_update_holdings(market, make))
+        fills.append(_update_holdings(market, take))
 
-    return _insert_order(exchange, order), fills
+    return _insert_order(market, order), fills

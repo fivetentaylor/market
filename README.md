@@ -8,7 +8,7 @@ It places the whole marketplace in a dictionary
 
 ```python
 exchange = {
-  'markets': {
+  'products': {
     'A-B': {
       'asks': [[rate, amount]...],
       'bids': [[rate, amount]...],
@@ -43,13 +43,13 @@ exchange = {
 - We probably need a meta algorithm that removes losing models from the pool... and potentially creates copies of winning models with refreshed holdings...
 - **Data**
   - Holdings is just our distribution of money across each product, and is a fixed width vector for a given model
-  - Orders is a variable width vector representing our current orders in each market... should we use some recurrent net to understand them at each decision point?
-  - Orderbook represents the current supply and demand of the market and is a large variable size tensor shaped (2, 2, N)
+  - Orders is a variable width vector representing our current orders in each product... should we use some recurrent net to understand them at each decision point?
+  - Orderbook represents the current supply and demand of the product and is a large variable size tensor shaped (2, 2, N)
   - Recent events? Orders and fills over some recent period or fixed number like the last 10k events that lead to the current order book?
 - Should we run inference at each market event? Or at some fixed time interval?
 - The model can take a maker, taker or hybrid approach
 - It can predict
-  - [buy, rate, amount, market]
+  - [buy, rate, amount, product]
   - [prod1_amount, prod2_amount, ..., prodN_amount] and then aggresively try to rebalance once it's out of some threshold far enough
 - Marketplaces have higher fees for taker orders vs maker orders, that should be baked into training
 
