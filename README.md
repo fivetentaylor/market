@@ -29,6 +29,24 @@ exchange = {
 }
 ```
 
+## Add order
+
+bid on BTC-USD
+
+The quote_increment field specifies the min order price as well as the price increment
+
+```python
+{
+    "id": "BTC-USD",
+    "base_currency": "BTC",
+    "quote_currency": "USD",
+    "base_min_size": "0.001",
+    "base_max_size": "10000.00",
+    "quote_increment": "0.01"
+}
+```
+
+
 ## TODO
 
 - Convert and properly handle internal precision for each product

@@ -18,7 +18,7 @@ for i in range(10000):
         'account': choice(accounts),
         'product': choice(products),
         'side': choice(side),
-        'rate': random() * 10,
+        'price': random() * 10,
         'size': random() * 10,
     }
     order, fills = market.create_order(exchange, **params)

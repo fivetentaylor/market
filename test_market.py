@@ -6,8 +6,8 @@ def test_create_asks():
     o = {
         'account': '123',
         'side': 'ask',
-        'market': 'A-B',
-        'rate': 100.0,
+        'product': 'A-B',
+        'price': 100.0,
         'size': 5,
     }
 
@@ -15,25 +15,25 @@ def test_create_asks():
 
     market.add_funds(m, '123', 'A', 10000)
 
-    rates = [99.0, 100.0, 101.0]
-    for rate in rates:
+    prices = [99.0, 100.0, 101.0]
+    for price in prices:
         o = deepcopy(o)
-        o['rate'] = rate
+        o['price'] = price
         market.create_order(m, **o)
 
-    asks = m['markets']['A-B']['asks']
+    asks = m['products']['A-B']['asks']
     assert(asks[0][0] == 99.0)
     assert(asks[1][0] == 100.0)
     assert(asks[2][0] == 101.0)
 
-    assert(m['accounts']['123']['balances']['A'] == 10000 - sum(rates) * 5)
+    assert(m['accounts']['123']['balances']['A'] == 10000 - sum(prices) * 5)
 
 def test_create_bids():
     o = {
         'account': '123',
         'side': 'bid',
-        'market': 'A-B',
-        'rate': 100.0,
+        'product': 'A-B',
+        'price': 100.0,
         'size': 5,
     }
 
@@ -41,33 +41,33 @@ def test_create_bids():
 
     market.add_funds(m, '123', 'B', 10000)
 
-    rates = [99.0, 100.0, 101.0]
-    for rate in rates:
+    prices = [99.0, 100.0, 101.0]
+    for price in prices:
         o = deepcopy(o)
-        o['rate'] = rate
+        o['price'] = price
         market.create_order(m, **o)
 
-    bids = m['markets']['A-B']['bids']
+    bids = m['products']['A-B']['bids']
     assert(bids[2][0] == 99.0)
     assert(bids[1][0] == 100.0)
     assert(bids[0][0] == 101.0)
 
-    assert(m['accounts']['123']['balances']['B'] == 10000 - sum(rates) * 5)
+    assert(m['accounts']['123']['balances']['B'] == 10000 - sum(prices) * 5)
 
 def test_fill_orders():
     bid = {
         'account': '123',
         'side': 'bid',
-        'market': 'A-B',
-        'rate': 100.0,
+        'product': 'A-B',
+        'price': 100.0,
         'size': 5,
     }
 
     ask = {
         'account': '456',
         'side': 'ask',
-        'market': 'A-B',
-        'rate': 100.0,
+        'product': 'A-B',
+        'price': 100.0,
         'size': 5,
     }
 
@@ -99,8 +99,8 @@ def test_cancel_order():
     o = {
         'account': '123',
         'side': 'ask',
-        'market': 'A-B',
-        'rate': 100.0,
+        'product': 'A-B',
+        'price': 100.0,
         'size': 5,
     }
 

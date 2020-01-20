@@ -63,27 +63,29 @@ def add_funds(market: dict, account: str, currency: str, size: float):
     balances = market['accounts'][account]['balances']
     balances[currency] = balances.get(currency, 0) + size
 
+    return market
+
 
 def _verify_holdings(
     market: dict,
     order: dict
 ):
-    account, product, side, rate, size = itemgetter(
-        'account', 'product', 'side', 'rate', 'size'
+    account, product, side, price, size = itemgetter(
+        'account', 'product', 'side', 'price', 'size'
     )(order)
 
     left, right = product.split('-')
     currency = left if side == 'ask' else right
     balance = market['accounts'][account]['balances'].setdefault(currency, 0)
-    if size * rate > balance:
+    if size * price > balance:
         raise ValueError(
             ('Account %s has ' +
             'insuficient funds %f in %s ' +
-            'to cover size * rate = %f') %
-            (account, balance, currency, size * rate)
+            'to cover size * price = %f') %
+            (account, balance, currency, size * price)
         )
     else:
-        market['accounts'][account]['balances'][currency] -= rate * size
+        market['accounts'][account]['balances'][currency] -= price * size
 
 
 def _fill_orders(
@@ -97,7 +99,7 @@ def _fill_orders(
     while (
         len(book) > 0 and
         order['size'] > 0 and
-        comp(order['rate'], book[0][0])
+        comp(order['price'], book[0][0])
     ):
         make = deepcopy(market['orders'][book[0][2]])
         make['maker'] = True
@@ -121,7 +123,7 @@ def _fill_orders(
             make['complete'] = True
             take['complete'] = False
 
-        take['rate'] = make['rate']
+        take['price'] = make['price']
         yield [make, take]
 
 
@@ -129,8 +131,8 @@ def _update_holdings(
     market: dict,
     fill: dict
 ):
-    oid, account, product, side, rate, size, maker = itemgetter(
-        'id', 'account', 'product', 'side', 'rate', 'size', 'maker'
+    oid, account, product, side, price, size, maker = itemgetter(
+        'id', 'account', 'product', 'side', 'price', 'size', 'maker'
     )(fill)
 
     if maker:
@@ -144,7 +146,7 @@ def _update_holdings(
     currency = left if side == 'bid' else right
     balance = market['accounts'][account]['balances'].setdefault(currency, 0)
 
-    market['accounts'][account]['balances'][currency] += rate * size
+    market['accounts'][account]['balances'][currency] += price * size
 
     return deepcopy(fill)
 
@@ -162,7 +164,7 @@ def _insert_order(
     mrkt = market['products'][order['product']]
 
     insert(
-        list(itemgetter('rate', 'size', 'id')(order)),
+        list(itemgetter('price', 'size', 'id')(order)),
         mrkt[book],
         reverse=book == 'bids',
     )
@@ -177,15 +179,15 @@ def cancel_order(
     # remove order from market
     order = market['orders'].pop(order_id)
 
-    aid, product, side, rate, size = itemgetter(
-        'account', 'product', 'side', 'rate', 'size'
+    aid, product, side, price, size = itemgetter(
+        'account', 'product', 'side', 'price', 'size'
     )(order)
 
     # remove order from book
     book = market['products'][product]['%ss' % side]
-    ix = bisect(rate, book, key=lambda o: o[0], reverse=side == 'bid')
+    ix = bisect(price, book, key=lambda o: o[0], reverse=side == 'bid')
     for i in range(ix, len(book)):
-        if book[i][0] > rate:
+        if book[i][0] > price:
             break
 
         # this is okay since we break right after deleting
@@ -199,7 +201,7 @@ def cancel_order(
     left, right = product.split('-')
     currency = left if side == 'ask' else right
 
-    account['balances'][currency] += rate * size
+    account['balances'][currency] += price * size
 
 
 def create_order(
@@ -207,7 +209,7 @@ def create_order(
     account: str,
     product: str,
     side: Union[Literal['ask'], Literal['bid']],
-    rate: float,
+    price: float,
     size: float
 ):
     _account_defaults(market, account)
@@ -218,7 +220,7 @@ def create_order(
         'account': account,
         'product': product,
         'side': side,
-        'rate': rate,
+        'price': price,
         'size': size,
     }
     _verify_holdings(market, order)
