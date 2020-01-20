@@ -5,18 +5,18 @@ import itertools as it
 
 exchange = {}
 accounts = ['user%d' % i for i in range(5)]
-products = ['A', 'B', 'C']
-markets = ['%s-%s' % p for p in it.permutations(products, 2)]
+currencies = ['A', 'B', 'C']
+products = ['%s-%s' % p for p in it.permutations(currencies, 2)]
 side = ['ask', 'bid']
 
-for account, product in it.product(accounts, products):
-    market.add_funds(exchange, account, product, 10000)
+for account, currency in it.product(accounts, currencies):
+    market.add_funds(exchange, account, currency, 10000)
 
 fill_count = 0
 for i in range(10000):
     params = {
         'account': choice(accounts),
-        'market': choice(markets),
+        'product': choice(products),
         'side': choice(side),
         'rate': random() * 10,
         'size': random() * 10,
