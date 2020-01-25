@@ -5,9 +5,9 @@ from operator import le, ge, itemgetter
 from typing import Dict, List, Union, Literal, Tuple
 
 
-def _account_defaults(market: dict, account: str):
+def add_account(market: dict, account_id: str):
     accounts = market.setdefault('accounts', {})
-    accounts.setdefault(account, {
+    accounts.setdefault(account_id, {
         'balances': {},
         'orders': [],
     })
@@ -15,36 +15,40 @@ def _account_defaults(market: dict, account: str):
     return market
 
 
-def _product_defaults(market: dict, product: str):
-    products = market.setdefault('products', {})
-    products.setdefault(product, {
-        'asks': [],
-        'bids': [],
-    })
-
-    return market
-
-
-def _add_currency(
+def add_currency(
     market: dict,
     cur_id: str,
     name: str,
     min_size: str
 ):
+    currencies = market.setdefault('currencies', {})
+    currencies[cur_id] = {
+        'id': cur_id,
+        'name': name,
+        'min_size': min_size,
+    }
+
     return market
 
 
-def _add_product(
+def add_product(
     market: dict,
     prod_id: str,
-    base_currency: str,
-    quote_currency: str,
     base_min_size: str,
     base_max_size: str,
     quote_increment: str
 ):
+    base_currency, quote_currency = prod_id.split('-')
+
+    if base_currency not in market['currencies']:
+        raise KeyError('Currency %s not in market' % base_currency
+    if quote_currency not in market['currencies']:
+        raise KeyError('Currency %s not in market' % quote_currency
+
     products = market.setdefault('products', {})
-    products[prod_id] = {
+    products.setdefault(prod_id, {
+        'asks': [],
+        'bids': [],
         'id': prod_id,
         'base_currency': base_currency,
         'quote_currency': quote_currency,
@@ -59,7 +63,6 @@ def _add_product(
 def add_funds(market: dict, account: str, currency: str, size: float):
     if size <= 0:
         raise ValueError('size must be greater than 0')
-    _account_defaults(market, account)
     balances = market['accounts'][account]['balances']
     balances[currency] = balances.get(currency, 0) + size
 
@@ -212,9 +215,6 @@ def create_order(
     price: float,
     size: float
 ):
-    _account_defaults(market, account)
-    _product_defaults(market, product)
-
     order = {
         'id': str(uuid4()),
         'account': account,

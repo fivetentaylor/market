@@ -31,9 +31,10 @@ exchange = {
 
 ## Add order
 
-bid on BTC-USD
-
 The quote_increment field specifies the min order price as well as the price increment
+
+if you're trying to sell(ask), you need enough USD
+if you're trying to buy(bid), you need enough BTC
 
 ```python
 {
