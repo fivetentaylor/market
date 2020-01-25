@@ -15,16 +15,23 @@ def add_account(market: dict, account_id: str):
     return market
 
 
+def add_funds(market: dict, account_id: str, currency: str, size: float):
+    if size <= 0:
+        raise ValueError('size must be greater than 0')
+    balances = market['accounts'][account_id]['balances']
+    balances[currency] = balances.get(currency, 0) + size
+
+    return market
+
+
 def add_currency(
     market: dict,
     cur_id: str,
-    name: str,
     min_size: str
 ):
     currencies = market.setdefault('currencies', {})
     currencies[cur_id] = {
         'id': cur_id,
-        'name': name,
         'min_size': min_size,
     }
 
@@ -41,30 +48,25 @@ def add_product(
     base_currency, quote_currency = prod_id.split('-')
 
     if base_currency not in market['currencies']:
-        raise KeyError('Currency %s not in market' % base_currency
+        raise KeyError('Currency %s not in market' % base_currency)
     if quote_currency not in market['currencies']:
-        raise KeyError('Currency %s not in market' % quote_currency
+        raise KeyError('Currency %s not in market' % quote_currency)
 
     products = market.setdefault('products', {})
     products.setdefault(prod_id, {
-        'asks': [],
-        'bids': [],
         'id': prod_id,
         'base_currency': base_currency,
         'quote_currency': quote_currency,
         'base_min_size': base_min_size,
         'base_max_size': base_max_size,
         'quote_increment': quote_increment,
-    }
+    })
 
-    return market
-
-
-def add_funds(market: dict, account: str, currency: str, size: float):
-    if size <= 0:
-        raise ValueError('size must be greater than 0')
-    balances = market['accounts'][account]['balances']
-    balances[currency] = balances.get(currency, 0) + size
+    books = market.setdefault('books', {})
+    books.setdefault(prod_id, {
+        'asks': [],
+        'bids': [],
+    })
 
     return market
 
@@ -77,18 +79,23 @@ def _verify_holdings(
         'account', 'product', 'side', 'price', 'size'
     )(order)
 
-    left, right = product.split('-')
-    currency = left if side == 'ask' else right
+    base, quote = product.split('-')
+
+    ask = side == 'ask'
+    currency = quote if ask else base
+    required = size if ask else size * price
     balance = market['accounts'][account]['balances'].setdefault(currency, 0)
-    if size * price > balance:
+
+    if required > balance:
         raise ValueError(
             ('Account %s has ' +
             'insuficient funds %f in %s ' +
-            'to cover size * price = %f') %
-            (account, balance, currency, size * price)
+            'to cover %f') %
+            (account, balance, currency, required)
         )
-    else:
-        market['accounts'][account]['balances'][currency] -= price * size
+
+    market['accounts'][account]['balances'][currency] -= required
+    return market
 
 
 def _fill_orders(
@@ -96,8 +103,9 @@ def _fill_orders(
     order: dict
 ):
     mrkt = market['products'][order['product']]
-    book = mrkt['bids' if order['side'] == 'ask' else 'asks']
-    comp = le if order['side'] == 'ask' else ge
+    ask = order['side'] == 'ask'
+    book = mrkt['bids' if ask else 'asks']
+    comp = le if ask else ge
 
     while (
         len(book) > 0 and
@@ -145,11 +153,12 @@ def _update_holdings(
         if orders[oid]['size'] == 0:
             del orders[oid]
 
-    left, right = product.split('-')
-    currency = left if side == 'bid' else right
-    balance = market['accounts'][account]['balances'].setdefault(currency, 0)
+    base, quote = product.split('-')
+    ask = side == 'ask'
+    currency = base if ask else quote
+    amount = size * price if ask else size
 
-    market['accounts'][account]['balances'][currency] += price * size
+    market['accounts'][account]['balances'][currency] += amount
 
     return deepcopy(fill)
 
@@ -220,8 +229,8 @@ def create_order(
         'account': account,
         'product': product,
         'side': side,
-        'price': price,
-        'size': size,
+        'price': float(price),
+        'size': float(size),
     }
     _verify_holdings(market, order)
 

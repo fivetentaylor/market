@@ -13,6 +13,7 @@ def test_create_asks():
 
     m = {}
 
+    market.add_account(m, '123')
     market.add_funds(m, '123', 'A', 10000)
 
     prices = [99.0, 100.0, 101.0]
@@ -39,6 +40,7 @@ def test_create_bids():
 
     m = {}
 
+    market.add_account(m, '123')
     market.add_funds(m, '123', 'B', 10000)
 
     prices = [99.0, 100.0, 101.0]
@@ -72,6 +74,14 @@ def test_fill_orders():
     }
 
     m = {}
+    market.add_account(m, '123')
+    market.add_account(m, '456')
+    market.add_currency(m, 'A', '0.001')
+    market.add_currency(m, 'B', '0.001')
+
+    market.add_product(m, 'A-B', '0.001', '100', '0.001')
+    pudb.set_trace()
+
     market.add_funds(m, '123', 'B', 10000)
     market.add_funds(m, '456', 'A', 10000)
 
@@ -89,11 +99,15 @@ def test_fill_orders():
 
 def test_add_funds():
     m = {}
-    market.add_funds(m, 'acct0', 'prod0', 101.0)
-    market.add_funds(m, 'acct1', 'prod0', 105.0)
+    market.add_account(m, 'acct0')
+    market.add_account(m, 'acct1')
+    market.add_currency(m, 'cur0', '0.001')
 
-    assert(m['accounts']['acct0']['balances']['prod0'] == 101.0)
-    assert(m['accounts']['acct1']['balances']['prod0'] == 105.0)
+    market.add_funds(m, 'acct0', 'cur0', 101.0)
+    market.add_funds(m, 'acct1', 'cur0', 105.0)
+
+    assert(m['accounts']['acct0']['balances']['cur0'] == 101.0)
+    assert(m['accounts']['acct1']['balances']['cur0'] == 105.0)
 
 def test_cancel_order():
     o = {
@@ -106,6 +120,7 @@ def test_cancel_order():
 
     m = {}
 
+    market.add_account(m, '123')
     market.add_funds(m, '123', 'A', 10000)
     order, _ = market.create_order(m, **o)
 

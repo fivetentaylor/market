@@ -31,10 +31,10 @@ exchange = {
 
 ## Add order
 
-The quote_increment field specifies the min order price as well as the price increment
-
-if you're trying to sell(ask), you need enough USD
-if you're trying to buy(bid), you need enough BTC
+- The quote_increment field specifies the min order price as well as the price increment
+- if you're trying to sell(ask), you need enough USD
+- if you're trying to buy(bid), you need enough BTC
+- Does it matter if the quote currency is larger or smaller than the base currency?
 
 ```python
 {
